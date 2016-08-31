@@ -85,7 +85,7 @@ convert({_, undefined}, Acc) -> Acc;
 convert({pid, Pid}, Acc) when is_pid(Pid) ->
   [{pid, list_to_binary(pid_to_list(Pid))} | Acc];
 convert({K, List}, Acc) when is_list(List) ->
-  [{K, iolist_to_binary(List)} | Acc];
+  [{K, unicode:characters_to_binary(List)} | Acc];
 convert({K, Atom}, Acc) when is_atom(Atom) ->
   [{K, atom_to_binary(Atom, latin1)} | Acc];
 convert(Else, Acc) -> [Else | Acc].
