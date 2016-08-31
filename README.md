@@ -22,6 +22,7 @@ And configure `lager` app with something like this:
     ]}
   ]}
 ].
+```
 
 Sample logstash config:
 
