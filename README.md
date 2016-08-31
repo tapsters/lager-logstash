@@ -1,5 +1,5 @@
 # lager-logstash
-[Lager][lager] backend for sending logs to [Logstash][logstash] with udp support
+[Lager](https://github.com/basho/lager) backend for sending logs to [Logstash](https://www.elastic.co/products/logstash) with udp support
 
 ## Configuration
 
