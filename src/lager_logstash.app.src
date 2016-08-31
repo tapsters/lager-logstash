@@ -1,0 +1,8 @@
+{application, lager_logstash, [
+  {description, "Lager handler logstash"},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [ kernel, stdlib, lager, jiffy ]},
+  {env, []}
+]}.
+
