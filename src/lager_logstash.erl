@@ -36,20 +36,26 @@ init(Params) ->
 
 %% @private
 handle_event({log, Message}, State) ->
-  Level = lager_msg:severity(Message),
-  Timestamp = timestamp(lager_msg:datetime(Message)),
-  Message1 = lager_msg:message(Message),
-  Metadata = lager_msg:metadata(Message),
-  Data = [{type, lager_logstash},
-          {level, Level},
-          {'@timestamp', Timestamp},
-          {message, Message1} | Metadata],
+  case is_loggable(Message, State#state.level) of
+    true  ->
+      Level = lager_msg:severity(Message),
+      Timestamp = timestamp(lager_msg:datetime(Message)),
+      Message1 = lager_msg:message(Message),
+      Metadata = lager_msg:metadata(Message),
+      Data = [
+        {type, lager_logstash},
+        {level, Level},
+        {'@timestamp', Timestamp},
+        {message, Message1} | Metadata
+      ],
 
-  Msg = jiffy:encode({convert(Data)}),
+      Msg = jiffy:encode({convert(Data)}),
 
-  ok = gen_udp:send(State#state.socket, State#state.address, State#state.port, Msg),
+      ok = gen_udp:send(State#state.socket, State#state.address, State#state.port, Msg),
 
-  {ok, State};
+      {ok, State};
+    false -> {ok, State}
+  end;
 handle_event(_Event, State) ->
   {ok, State}.
 
@@ -89,4 +95,10 @@ convert({K, List}, Acc) when is_list(List) ->
 convert({K, Atom}, Acc) when is_atom(Atom) ->
   [{K, atom_to_binary(Atom, latin1)} | Acc];
 convert(Else, Acc) -> [Else | Acc].
+
+-spec is_loggable(lager_msg:lager_msg(), non_neg_integer()|{'mask', non_neg_integer()}) -> boolean().
+is_loggable(Msg, {mask, Mask}) ->
+  (lager_msg:severity_as_int(Msg) band Mask) /= 0;
+is_loggable(Msg, SeverityThreshold) ->
+  lager_msg:severity_as_int(Msg) =< SeverityThreshold.
 
