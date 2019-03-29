@@ -15,6 +15,7 @@ And configure `lager` app with something like this:
     [
      {lager_logstash,
       [
+       {type, backend},
        {level, info},
        {host, "localhost"},
        {port, 5000}]}

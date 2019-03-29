@@ -1,21 +1,18 @@
-%% @doc File backend for lager, with udp support.
-
 -module(lager_logstash).
-
 -behaviour(gen_event).
 
--export([init/1, handle_event/2, handle_call/2,
-         handle_info/2, terminate/2, code_change/3]).
+-export([init/1, handle_event/2, handle_call/2, handle_info/2, terminate/2, code_change/3]).
 
 -type option() :: {level, lager:log_level()} |
-{host, inet:hostname()} |
-{port, inet:port_number()}.
+  {host, inet:hostname()} |
+  {port, inet:port_number()}.
 
 -record(state, {
-address :: inet:ip_address() | inet:hostname(),
-port :: inet:port_number(),
-level :: {'mask', integer()},
-socket :: gen_udp:socket()
+  address :: inet:ip_address() | inet:hostname(),
+  port    :: inet:port_number(),
+  level   :: {'mask', integer()},
+  socket  :: gen_udp:socket(),
+  type    :: string()
 }).
 
 -spec init([option(),...]) -> {ok, #state{}}.
@@ -23,6 +20,7 @@ init(Params) ->
   Level        = proplists:get_value(level, Params, debug),
   Host         = proplists:get_value(host, Params, undefined),
   Port         = proplists:get_value(port, Params, undefined),
+  Type         = proplists:get_value(type, Params, lager_logstash),
 
   {ok, Address} = inet:getaddr(Host, inet),
   {ok, Socket} = gen_udp:open(0, [binary,{active,false}]),
@@ -31,7 +29,8 @@ init(Params) ->
     address = Address,
     port    = Port,
     level   = lager_util:level_to_num(Level),
-    socket  = Socket
+    socket  = Socket,
+    type    = Type
   }}.
 
 %% @private
@@ -43,7 +42,7 @@ handle_event({log, Message}, State) ->
       Message1 = lager_msg:message(Message),
       Metadata = lager_msg:metadata(Message),
       Data = [
-        {type, lager_logstash},
+        {type, State#state.type},
         {level, Level},
         {'@timestamp', Timestamp},
         {message, Message1} | Metadata
